@@ -24,7 +24,7 @@ module Top (
   Clock_Conv #(
       .FREQ_IN (100_000_000),
       .FREQ_OUT(25_000_000)
-  ) clock_conv (
+  ) clock_vga (
       .clk_in (clk),
       .clk_out(clk_vga)
   );
@@ -59,14 +59,33 @@ module Top (
       .data  (data)
   );
 
-  localparam INT16_MAX = 65536;
+  //--------------------------------------------------------------------------//
+  // Display
+  //--------------------------------------------------------------------------//
+  wire clk_disp;
+
+  Clock_Conv #(
+      .FREQ_IN (100_000_000),
+      .FREQ_OUT(180)
+  ) clock_disp (
+      .clk_in (clk),
+      .clk_out(clk_disp)
+  );
+
+  localparam UINT16_MAX = 65536;
+  logic [599:0][9:0] arr;  // data array (store all our data-points)
+
+  always_ff @(posedge clk_disp) begin
+    arr[599:1] <= arr[598:0];
+    arr[0] <= 525 - ((data * 480) / UINT16_MAX);  // normalize to be within viewable range
+  end
 
   always_ff @(posedge clk_vga) begin
-    if (y == (525 - ((data * 480) / INT16_MAX))) begin
+    if (x < 600 && y == arr[x]) begin  // active data point
       rgb <= 12'b1111_1111_1111;
-    end else if (x % 60 == 0 || y % 48 == 0) begin
+    end else if (x % 60 == 0 || y % 48 == 0) begin  // grid pattern
       rgb <= 12'b0001_0001_0001;
-    end else begin
+    end else begin  // nil
       rgb <= 12'b0;
     end
   end
