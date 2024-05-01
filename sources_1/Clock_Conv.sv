@@ -2,6 +2,8 @@
 `default_nettype none
 
 
+/// Clock conversion FREQ_IN -> FREQ_OUT
+/// FREQ_OUT must be lower than FREQ_IN
 module Clock_Conv #(
     parameter FREQ_IN  = 100_000_000,
     parameter FREQ_OUT = 25_175_000
